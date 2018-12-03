@@ -1,0 +1,10 @@
+[Unit]
+Description=runs rsync-backup-local.service at a given time
+ 
+[Timer]
+OnCalendar=*-*-* {{ backup.hour }}:{{ backup.minute }}:00
+Persistent=true
+Unit=rsync-backup.service
+ 
+[Install]
+WantedBy=timers.target

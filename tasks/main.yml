@@ -1,0 +1,59 @@
+---
+- name: Ensure that backup_target folder exists
+  file:
+    path: "{{ backup.target }}"
+    state: present
+    
+- name: Gera a pasta dos service
+  file:
+    path: /etc/systemd/rsync-backup.d
+    owner: root
+    group: root
+    mode: 0700
+    state: directory
+
+- name: Copy the local backup service to server
+  when: backup.type == 'local'
+  template:
+    src: rsync-backup-local.service.j2
+    dest: /etc/systemd/rsync-backup.d/rsync-backup-local.service
+    owner: root
+    group: root
+    mode: 0700
+
+- name: Copy the remote backup service to server
+  when: backup.type == 'remote'
+  template:
+    src: rsync-backup-remote.service.j2
+    dest: /etc/systemd/rsync-backup.d/rsync-backup-remote.service
+    owner: root
+    group: root
+    mode: 0700
+
+- name: Copy the backup timer to server
+  template:
+    src: rsync-backup.timer.j2
+    dest: /etc/systemd/rsync-backup.d/rsync-backup-remote.service
+    owner: root
+    group: root
+    mode: 0700
+
+- name: Activate the local backup service
+  when: backup.type == 'local'
+  systemd:
+    name: rsync-backup-local
+    state: started
+    enabled: yes
+
+- name: Activate the remote backup service
+  when: backup.type == 'remote'
+  systemd:
+    name: rsync-backup-remote
+    state: started
+    enabled: yes
+
+- name: Activate the backup timer
+  systemd:
+    name: rsync-backup.timer
+    state: started
+    enabled: yes

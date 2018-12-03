@@ -1,0 +1,17 @@
+---
+
+- backup:
+    target: "/var/www/html" # Directory to be backed up
+    day_of_week: "" # Days to run the backup service
+    hour: "3" # Hour to run the backup service
+    minute: "00" # Minute to run the backup service
+    type: # 'remote' or 'local':
+
+- remote: # Save backup files on remote server
+    identifier: enter_id_here
+    connection: user@remotebackup.com
+    base_path: where_to_save # Where to save on remote server
+    ssh_options: ""
+
+- local:
+    safe_path: # Where to save locally

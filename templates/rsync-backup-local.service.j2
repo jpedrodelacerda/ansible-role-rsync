@@ -1,0 +1,11 @@
+/etc/systemd/system/rsync-backup.service
+ 
+[Unit]
+Description=runs rsync backup of {{ target }} to external {{ safe-storage }}
+ 
+[Service]
+Type=oneshot
+ExecStart=rsync -av {{ target }} {{ safe_storage }}
+ 
+[Install]
+WantedBy=multi-user.target
