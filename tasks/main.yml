@@ -1,59 +1,34 @@
 ---
-- name: Ensure that backup_target folder exists
-  file:
-    path: "{{ backup.target }}"
-    state: present
-    
-- name: Gera a pasta dos service
+- name: Ensure that backup_target file or directory exists
+  become: yes
+  find:
+    path: "{{ item.value.backup_target }}"
+    file_type: any
+  with_dict: "{{ backup }}"
+  tags:
+    - now
+    - local
+    - remote
+
+- name: Create services directory
+  become: yes
   file:
     path: /etc/systemd/rsync-backup.d
     owner: root
     group: root
     mode: 0700
     state: directory
+  tags:
+    - local
+    - remote
 
-- name: Copy the local backup service to server
-  when: backup.type == 'local'
-  template:
-    src: rsync-backup-local.service.j2
-    dest: /etc/systemd/rsync-backup.d/rsync-backup-local.service
-    owner: root
-    group: root
-    mode: 0700
+- import_tasks: local.yml
+  become: yes
+  tags:
+    - local
 
-- name: Copy the remote backup service to server
-  when: backup.type == 'remote'
-  template:
-    src: rsync-backup-remote.service.j2
-    dest: /etc/systemd/rsync-backup.d/rsync-backup-remote.service
-    owner: root
-    group: root
-    mode: 0700
-
-- name: Copy the backup timer to server
-  template:
-    src: rsync-backup.timer.j2
-    dest: /etc/systemd/rsync-backup.d/rsync-backup-remote.service
-    owner: root
-    group: root
-    mode: 0700
-
-- name: Activate the local backup service
-  when: backup.type == 'local'
-  systemd:
-    name: rsync-backup-local
-    state: started
-    enabled: yes
-
-- name: Activate the remote backup service
-  when: backup.type == 'remote'
-  systemd:
-    name: rsync-backup-remote
-    state: started
-    enabled: yes
-
-- name: Activate the backup timer
-  systemd:
-    name: rsync-backup.timer
-    state: started
-    enabled: yes
+- import_tasks: remote.yml
+  become: yes
+  tags:
+    - remote
+    

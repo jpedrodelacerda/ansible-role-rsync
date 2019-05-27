@@ -1,11 +1,10 @@
-/etc/systemd/system/rsync-backup.service
- 
 [Unit]
-Description=runs rsync backup of {{ target }} to external {{ safe-storage }}
+Description=runs rsync backup of {{ item.value.backup_target }} to {{ item.value.local_safe_path }}
  
 [Service]
-Type=oneshot
-ExecStart=rsync -av {{ target }} {{ safe_storage }}
- 
+Type=simple
+ExecStart=/bin/bash -c 'rsync {{ rsync_flags | join(' ') }} {{ item.value.backup_target }} {{ item.value.local_safe_path }}$$(date +"%%Y%%m%%d-%%H%%M")-{{ item.value.backup_target | basename }}'
+User=root
+
 [Install]
 WantedBy=multi-user.target

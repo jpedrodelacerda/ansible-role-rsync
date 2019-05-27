@@ -1,0 +1,52 @@
+---
+- name: Copy local backup services to server
+  become: yes
+  when:
+    - ('item.value.backup_now == true' or 'backup_now == true')
+    - 'item.value.local_safe_path is defined'
+  template:
+    src: rsync-backup-local.service.j2
+    dest: "/etc/systemd/system/rsync-backup-local-{{ item.key }}.service"
+    owner: root
+    group: root
+    mode: 0600
+  with_dict: "{{ backup }}"
+  tags:
+    - now
+
+- name: Copy local backup timers to server
+  become: yes
+  when: 'item.value.local_safe_path is defined'
+  template:
+    src: rsync-backup-local.timer.j2
+    dest: "/etc/systemd/system/rsync-backup-local-{{ item.key }}.timer"
+    owner: root
+    group: root
+    mode: 0600
+  with_dict: "{{ backup }}"
+    
+- name: Reload daemons
+  become: yes
+  shell: >-
+    systemctl daemon-reload
+
+- name: Enable the local backup timer
+  become: yes
+  when: 'item.value.local_safe_path is defined'
+  systemd:
+    name: rsync-backup-local-{{ item.key }}.timer
+    state: restarted
+    enabled: yes
+  with_dict: "{{ backup }}"
+    
+- name: Run local backup now
+  become: yes
+  when:
+    - ('item.value.backup_now == true' or 'backup_now == true')
+    - 'item.value.local_safe_path is defined'
+  shell: >-
+    rsync {{ rsync_flags | join(' ') }} {{ item.value.backup_target }} {{ item.value.local_safe_path }}$(date +"%Y%m%d-%H%M")-{{ item.value.backup_target | basename }}
+  run_once: true
+  with_dict: "{{ backup }}"
+  tags:
+    - now

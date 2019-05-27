@@ -1,17 +1,37 @@
 ---
+# List of dictionaries with the targets and configuration.
+backup:
+  - example_target:
+      # Configuration for backup: can be remote and local simultaneously
+      backup_target: ""
+      # Options for remote backups
+      remote_safe_path: ""
+      remote_ssh_port: ""
+      remote_backup_hour: ""
+      remote_backup_minute: ""
+      remote_days_of_week: ""
+      # Options for local backups
+      local_safe_path: ""
+      local_backup_hour: ""
+      local_backup_minute: ""
+      local_days_of_week: ""
+      # Set if want to backup when running the playbook
+      backup_now: ""
 
-- backup:
-    target: "/var/www/html" # Directory to be backed up
-    day_of_week: "" # Days to run the backup service
-    hour: "3" # Hour to run the backup service
-    minute: "00" # Minute to run the backup service
-    type: # 'remote' or 'local':
+# List of flags to be passed to rsync
+rsync_flags: # must be a list
+  - "compress"
 
-- remote: # Save backup files on remote server
-    identifier: enter_id_here
-    connection: user@remotebackup.com
-    base_path: where_to_save # Where to save on remote server
-    ssh_options: ""
+# Defaults values
+backup_now: false
+days_of_week: "" # Days to run the backup service
+backup_hour: "3" # Hour to run the backup service
+backup_minute: "00" # Minute to run the backup service
+remote_ssh_port: "22" # If not set at the dictionary or here, defaults to '22'.
 
-- local:
-    safe_path: # Where to save locally
+# To see time options and formats see man systemd.time (7)
+ 
+
+# Timestamp to backup when 'backup_now' is set to true
+# Format: %Y%m%d-%H%M
+# timestamp: "{{ ansible_date_time.year }}{{ ansible_date_time.month }}{{ ansible_date_time.day }}-{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"

@@ -1,0 +1,52 @@
+---
+- name: Copy the remote backup service to server
+  become: yes
+  when:
+    - ('item.value.backup_now == true' or 'backup_now == true')
+    - 'item.value.remote_safe_path is defined'
+  template:
+    src: rsync-backup-remote.service.j2
+    dest: /etc/systemd/system/rsync-backup-remote-{{ item.key }}.service
+    owner: root
+    group: root
+    mode: 0600
+  with_dict: "{{ backup }}"
+  tags:
+    - now
+
+- name: Copy the backup timer to server
+  become: yes
+  when: 'item.value.remote_safe_path is defined'
+  template:
+    src: rsync-backup-remote.timer.j2
+    dest: /etc/systemd/system/rsync-backup-remote-{{ item.key }}.timer
+    owner: root
+    group: root
+    mode: 0600
+  with_dict: "{{ backup }}"
+
+- name: Reload daemons
+  become: yes
+  shell: >-
+    systemctl daemon-reload
+
+- name: Enable the remote backup timer
+  become: yes
+  when: 'item.value.remote_safe_path is defined'
+  systemd:
+    name: rsync-backup-remote-{{ item.key }}.timer
+    state: restarted
+    enabled: yes
+  with_dict: "{{ backup }}"
+
+- name: Run remote backup now
+  become: yes
+  when:
+    - ('item.value.backup_now == true' or 'backup_now == true')
+    - 'item.value.remote_safe_path is defined'
+  shell: >-
+    rsync {{ rsync_flags | join(' ') }} -e "ssh -p {{ item.value.remote_ssh_port | default(remote_ssh_port) | default(22) }}" {{ item.value.backup_target }} {{ item.value.remote_safe_path }}$(date +"%Y%m%d-%H%M")-{{ item.value.backup_target | basename }}
+  run_once: true
+  with_dict: "{{ backup }}"
+  tags:
+    - now

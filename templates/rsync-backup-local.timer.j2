@@ -1,10 +1,10 @@
 [Unit]
-Description=runs rsync-backup-local.service at a given time
- 
+Description=Performs the backup of {{ item.value.backup_target }} locally at {{ item.value.local_safe_path }}.
+
 [Timer]
-OnCalendar=*-*-* {{ backup.hour }}:{{ backup.minute }}:00
+OnCalendar={{ item.value.local_days_of_week | default(days_of_week) | default() }}*-*-* {{ item.value.local_backup_hour | default(backup_hour) | default("*") }}:{{ item.value.local_backup_minute | default(backup_minute) | default("00")}}
 Persistent=true
-Unit=rsync-backup.service
+Unit=rsync-backup-local-{{ item.key }}.service
  
 [Install]
 WantedBy=timers.target
